@@ -1,6 +1,6 @@
 openapi: 3.0.2
 info:
-  title: 'Proto Component (PC)'
+  title: 'Commonground Registratie Component (CGRC)'
   version: 0.0.1
   description: |
     Naast deze JSON rest API is er ook een [graphql](/graphql) interface beschikbaar. 
@@ -387,11 +387,11 @@ components:
 servers:
   -
     description: 'Demo Omgeving'
-    url: 'http://proto.demo.common-ground.dev'
+    url: 'http://cgrc.zaakonline.nl'
 externalDocs:
   -
     description: 'OAS Documentatie'
-    url: 'http://proto.demo.common-ground.dev'
+    url: 'http://cgrc.zaakonline.nl'
 x-commonground:
   type: tool
   developers:
