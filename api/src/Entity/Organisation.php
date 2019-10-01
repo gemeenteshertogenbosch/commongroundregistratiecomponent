@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Gedmo\Mapping\Annotation as Gedmo;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
@@ -11,7 +12,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 
+use App\Controller\OrganisationController;
 /**
  * An Organisation
  *
@@ -26,8 +29,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @subpackage  Commonground Registratie Component (CGRC)
  * 
  * @ApiResource(
- *  normalizationContext={"groups"={"read"}},
- *  denormalizationContext={"groups"={"write"}}
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  collectionOperations={
+ *  	"get"
+ *  },
+ * 	itemOperations={
+ *     "refresh" ={
+ *          "method"="POST",
+ *          "path"="/organisation/{id}/refresh",    
+ *          "controller"=OrganisationRefresh::class
+ *     },
+ *     "get"
+ *  }
  * )
  * @ORM\Entity(repositoryClass="App\Repository\OrganisationRepository")
  */
@@ -40,7 +54,7 @@ class Organisation
      * @ApiProperty(
      * 	   identifier=true,
      *     attributes={
-     *         "swagger_context"={
+     *         "openapi_context"={
      *         	   "description" = "The UUID identifier of this object",
      *             "type"="string",
      *             "format"="uuid",
@@ -65,11 +79,11 @@ class Organisation
 	 * @ApiProperty(
      * 	   iri="https://schema.org/name",
 	 *     attributes={
-	 *         "swagger_context"={
+	 *         "openapi_context"={
 	 *         	   "description" = "The name of this organisation",
 	 *             "type"="string",
 	 *             "example"="My Organisation",
-	 *             "maxLength"="255",
+	 *             "maxLength"=255,
 	 *             "required" = true
 	 *         }
 	 *     }
@@ -91,11 +105,11 @@ class Organisation
 	 * @ApiProperty(
      * 	   iri="https://schema.org/description",
 	 *     attributes={
-	 *         "swagger_context"={
+	 *         "openapi_context"={
 	 *         	   "description" = "An short description of this organisation",
 	 *             "type"="string",
 	 *             "example"="This is the best organisation ever",
-	 *             "maxLength"="2550,
+	 *             "maxLength"=2550
 	 *         }
 	 *     }
 	 * )
@@ -115,12 +129,12 @@ class Organisation
 	 * @ApiProperty(
      * 	   iri="https://schema.org/logo",
 	 *     attributes={
-	 *         "swagger_context"={
+	 *         "openapi_context"={
 	 *         	   "description" = "The logo for this organisation",
 	 *             "type"="string",
 	 *             "format"="url",
 	 *             "example"="https://www.my-organisation.com/logo.png",
-	 *             "maxLength"="255,
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -140,23 +154,76 @@ class Organisation
 	 *
 	 * @ApiProperty(
 	 *     attributes={
-	 *         "swagger_context"={
+	 *         "openapi_context"={
 	 *         	   "description" = "The slug for this organisation",
 	 *             "type"="string",
 	 *             "example"="my-organisation",
-	 *             "maxLength"="255,
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
 	 * 
+     * @Gedmo\Slug(fields={"name"})
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255)
      */
     private $slug;
+    
+    /**
+     * @var string $git The link to the git repository for this component
+     * @example https://www.github.com/my-organisation/my-component.git
+     *
+     * @ApiProperty(
+     * 	   iri="https://schema.org/url",
+     *     attributes={
+     *         "swagger_context"={
+     *         	   "description" = "The link to the git repository for this component",
+     *             "type"="string",
+     *             "format"="url",
+     *             "example"="https://www.github.com/my-organisation/my-component.git",
+     *             "maxLength"=255,
+     *             "required" = true
+     *         }
+     *     }
+     * )
+     *
+     * @Assert\NotNull
+     * @Assert\Url
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Groups({"read"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private $git;
+    
+    /**
+     * @var string $gitId The git id for the repository for this component
+     * @example my-component
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "swagger_context"={
+     *         	   "description" = "The git id for the repository for this component",
+     *             "type"="string",
+     *             "example"="my-component",
+     *             "maxLength"=255
+     *         }
+     *     }
+     * )
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Groups({"read"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $gitId;
 
     /**
 	 * @var ArrayCollection $components  The apis provided by this organisation
 	 * 
+	 * @maxDepth(1)
      * @Groups({"read"})
      * @ORM\ManyToMany(targetEntity="App\Entity\Component", inversedBy="organisations")
      */
@@ -165,6 +232,7 @@ class Organisation
     /**
 	 * @var ArrayCollection $apis The components provided by this organisation
 	 * 
+	 * @maxDepth(1)
      * @Groups({"read"})
      * @ORM\ManyToMany(targetEntity="App\Entity\API", inversedBy="organisations")
      */
@@ -226,6 +294,30 @@ class Organisation
     {
         $this->slug = $slug;
 
+        return $this;
+    }
+    
+    public function getGit(): ?string
+    {
+        return $this->git;
+    }
+    
+    public function setGit(string $git): self
+    {
+        $this->git = $git;
+        
+        return $this;
+    }
+    
+    public function getGitId(): ?string
+    {
+        return $this->gitId;
+    }
+    
+    public function setGitId(?string $gitId): self
+    {
+        $this->gitId = $gitId;
+        
         return $this;
     }
 

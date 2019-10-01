@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Gedmo\Mapping\Annotation as Gedmo;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
@@ -11,6 +12,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+
+
+use App\Controller\ComponentController;
+use App\Controller\Add;
+
 
 /**
  * A Component
@@ -26,12 +33,24 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @subpackage  Commonground Registratie Component (CGRC)
  *  
  * @ApiResource(
- *  normalizationContext={"groups"={"read"}},
- *  denormalizationContext={"groups"={"write"}},
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  collectionOperations={
- *  	"get"
+ *  	"get",
+ *      "add" ={
+ *         "method"="POST",
+ *         "path"="/add",    
+ *         "controller"=Add::class,
+ *         "read"=false,
+ *         "output"=false
+ *     }
  *  },
  * 	itemOperations={
+ *     "refresh" ={
+ *         "method"="POST",
+ *         "path"="/components/{id}/refresh",    
+ *         "controller"=ComponentRefresh::class
+ *     },
  *     "get"
  *  }
  * )
@@ -75,7 +94,7 @@ class Component
 	 *         	   "description" = "The name of this component",
 	 *             "type"="string",
 	 *             "example"="My component",
-	 *             "maxLength"="255",
+	 *             "maxLength"=255,
 	 *             "required" = true
 	 *         }
 	 *     }
@@ -101,7 +120,7 @@ class Component
 	 *         	   "description" = "An short description of this component",
 	 *             "type"="string",
 	 *             "example"="This is the best component ever",
-	 *             "maxLength"="2550"
+	 *             "maxLength"=2550
 	 *         }
 	 *     }
 	 * )
@@ -126,7 +145,7 @@ class Component
 	 *             "type"="string",
      *             "format"="url",
 	 *             "example"="https://www.my-organisation.com/logo.png",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -151,7 +170,7 @@ class Component
 	 *             "type"="string",
      *             "format"="url",
 	 *             "example"="v0.1.2.3-beta",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -174,11 +193,12 @@ class Component
 	 *         	   "description" = "The slug for this component",
 	 *             "type"="string",
 	 *             "example"="my-organisation",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
 	 * 
+     * @Gedmo\Slug(fields={"name"})
      * @Assert\Length(
      *      max = 255
      * )
@@ -199,7 +219,7 @@ class Component
 	 *             "type"="string",
      *             "format"="url",
 	 *             "example"="https://www.github.com/my-organisation/my-component.git",
-	 *             "maxLength"="255",
+	 *             "maxLength"=255,
 	 *             "required" = true
 	 *         }
 	 *     }
@@ -225,7 +245,7 @@ class Component
 	 *         	   "description" = "The git id for the repository for this component",
 	 *             "type"="string",
 	 *             "example"="my-component",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -248,7 +268,7 @@ class Component
 	 *         	   "description" = "The git type for the repository for this component",
 	 *             "type"="string",
 	 *             "example"="github",
-	 *             "maxLength"="255",
+	 *             "maxLength"=255,
 	 *             "enum"={"Github", "Gitlab", "Bitbucket"}
 	 *         }
 	 *     }
@@ -261,20 +281,29 @@ class Component
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $gitType;
+    
+    /**
+     * @var Organisation $owner The organisation that ownes this component (or better said it's repository) 
+     *
+     * @ORM\ManyToOne(targetEntity="App\Entity\Organisation",cascade={"persist"})
+     */
+    private $owner;
 
     /**     
 	 * @var ArrayCollection $apis The APIs provided by this component
 	 * 
+	 * @maxDepth(1)
 	 * @Groups({"read"})
-     * @ORM\OneToMany(targetEntity="App\Entity\API", mappedBy="component")
+     * @ORM\OneToMany(targetEntity="App\Entity\API", mappedBy="component",cascade={"persist"})
      */
     private $apis;
 
     /**
 	 * @var ArrayCollection $organisations The organisations that provide this component
 	 * 
+	 * @maxDepth(1)
 	 * @Groups({"read"})
-     * @ORM\ManyToMany(targetEntity="App\Entity\Organisation", mappedBy="components")
+     * @ORM\ManyToMany(targetEntity="App\Entity\Organisation", mappedBy="components",cascade={"persist"})
      */
     private $organisations;
 
@@ -382,6 +411,18 @@ class Component
     {
         $this->gitType = $gitType;
 
+        return $this;
+    }
+    
+    public function getOwner(): ?Organisation
+    {
+        return $this->owner;
+    }
+    
+    public function setOwner(?Organisation $owner): self
+    {
+        $this->owner = $owner;
+        
         return $this;
     }
 

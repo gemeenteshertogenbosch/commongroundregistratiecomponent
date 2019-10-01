@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Gedmo\Mapping\Annotation as Gedmo;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
@@ -11,6 +12,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+
+use App\Controller\ApiController;
 
 /**
  * An API
@@ -26,8 +30,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @subpackage  Commonground Registratie Component (CGRC)
  * 
  * @ApiResource(
- *  normalizationContext={"groups"={"read"}},
- *  denormalizationContext={"groups"={"write"}}
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  collectionOperations={
+ *  	"get"
+ *  },
+ * 	itemOperations={
+ *     "refresh" ={
+ *         "method"="POST",
+ *          "path"="/apis/{id}/refresh",    
+ *          "controller"=ApiRefresh::class
+ *     },
+ *     "get"
+ *  }
  * )
  * @ORM\Entity(repositoryClass="App\Repository\APIRepository")
  */
@@ -68,7 +83,7 @@ class API
 	 *         	   "description" = "The name of this API",
 	 *             "type"="string",
 	 *             "example"="My component",
-	 *              "maxLength"="255"
+	 *              "maxLength"=255
 	 *         }
 	 *     }
 	 * )	  
@@ -93,7 +108,7 @@ class API
 	 *         	   "description" = "An short description of this API",
 	 *             "type"="string",
 	 *             "example"="This is the best API ever",
-	 *              "maxLength"="2550"
+	 *              "maxLength"=2550
 	 *         }
 	 *     }
 	 * )
@@ -117,7 +132,7 @@ class API
      *             "type"="string",
      *             "format"="url",
      *             "example"="v0.1.2.3-beta",
-     *             "maxLength"="255"
+     *             "maxLength"=255
      *         }
      *     }
      * )
@@ -142,7 +157,7 @@ class API
 	 *             "type"="string",
      *             "format"="url",
 	 *             "example"="https://www.my-organisation.com/logo.png",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -166,11 +181,12 @@ class API
 	 *         	   "description" = "The slug for this api",
 	 *             "type"="string",
 	 *             "example"="my-organisation",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
 	 * 
+     * @Gedmo\Slug(fields={"name"})
      * @Assert\Length(
      *      max = 255
      * )
@@ -190,7 +206,7 @@ class API
 	 *         	   "description" = "The location where api calls should be directed to",
 	 *             "type"="string",
 	 *             "example"="https://api.my-organisation.com",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -216,7 +232,7 @@ class API
 	 *         	   "description" = "The location of the open api documentation of this api",
 	 *             "type"="string",
 	 *             "example"="https://api.my-organisation.com/docs",
-	 *             "maxLength"="255"
+	 *             "maxLength"=255
 	 *         }
 	 *     }
 	 * )
@@ -233,6 +249,7 @@ class API
     /**     
 	 * @var ArrayCollection $component The common ground component that this api provides
 	 * 
+	 * @maxDepth(1)
      * @Groups({"read"})
      * @ORM\ManyToOne(targetEntity="App\Entity\Component", inversedBy="apis")
      */
@@ -241,6 +258,7 @@ class API
     /**
 	 * @var ArrayCollection $organisations The organisations that provide this api
 	 * 
+	 * @maxDepth(1)
      * @Groups({"read"})
      * @ORM\ManyToMany(targetEntity="App\Entity\Organisation", mappedBy="apis")
      */
