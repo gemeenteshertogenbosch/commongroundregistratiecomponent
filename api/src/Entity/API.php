@@ -34,7 +34,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class API
 {
     /**
-     * @var \Ramsey\Uuid\UuidInterface
+     * @var \Ramsey\Uuid\UuidInterface $id The UUID identifier of this object
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @ApiProperty(
      * 	   identifier=true,
@@ -48,6 +49,7 @@ class API
      *     }
      * )
      *
+     * @Assert\Uuid
      * @Groups({"read"})
      * @ORM\Id
      * @ORM\Column(type="uuid", unique=true)
@@ -60,6 +62,7 @@ class API
 	 * @param string The name of this API
 	 *
 	 * @ApiProperty(
+     * 	   iri="http://schema.org/name",
 	 *     attributes={
 	 *         "swagger_context"={
 	 *         	   "description" = "The name of this API",
@@ -68,7 +71,7 @@ class API
 	 *              "maxLength"="255"
 	 *         }
 	 *     }
-	 * )	 * 
+	 * )	  
 	 * 
      * @Assert\NotNull
      * @Assert\Length(
@@ -80,9 +83,11 @@ class API
     private $name;
 
     /**
-	 * @param string An short description of this API
+	 * @var string An short description of this API
+     * @example This is the best API ever
 	 *
 	 * @ApiProperty(
+     * 	   iri="https://schema.org/description",
 	 *     attributes={
 	 *         "swagger_context"={
 	 *         	   "description" = "An short description of this API",
@@ -102,15 +107,35 @@ class API
     private $description;
 
     /**
+     * @var string The current production version of this component
+     * @example v0.1.2.3-beta
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "swagger_context"={
+     *         	   "description" = "The current production version of this component",
+     *             "type"="string",
+     *             "format"="url",
+     *             "example"="v0.1.2.3-beta",
+     *             "maxLength"="255"
+     *         }
+     *     }
+     * )
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $version;
 
     /**
-	 * @param string The logo for this component
+	 * @var string The logo for this component
+     * @example https://www.my-organisation.com/logo.png
 	 *
 	 * @ApiProperty(
+     * 	   iri="https://schema.org/logo",
 	 *     attributes={
 	 *         "swagger_context"={
 	 *         	   "description" = "The logo for this component",
@@ -122,6 +147,10 @@ class API
 	 *     }
 	 * )
 	 * 
+     * @Assert\Url
+     * @Assert\Length(
+     *      max = 255
+     * )
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -129,6 +158,7 @@ class API
 
     /**
 	 * @param string The slug for this api
+     * @example my-organisation
 	 *
 	 * @ApiProperty(
 	 *     attributes={
@@ -141,30 +171,76 @@ class API
 	 *     }
 	 * )
 	 * 
+     * @Assert\Length(
+     *      max = 255
+     * )
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $slug;
 
     /**
+	 * @param string $endpoint The location where api calls should be directed to
+     * @example https://api.my-organisation.com
+	 *
+	 * @ApiProperty(
+     * 	   iri="https://schema.org/url",
+	 *     attributes={
+	 *         "swagger_context"={
+	 *         	   "description" = "The location where api calls should be directed to",
+	 *             "type"="string",
+	 *             "example"="https://api.my-organisation.com",
+	 *             "maxLength"="255"
+	 *         }
+	 *     }
+	 * )
+	 * 
+     * @Assert\NotNull
+     * @Assert\Url
+     * @Assert\Length(
+     *      max = 255
+     * )
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255)
      */
     private $endpoint;
 
     /**
+	 * @param string The location of the open api documentation of this api
+     * @example https://api.my-organisation.com/docs
+	 *
+	 * @ApiProperty(
+     * 	   iri="https://schema.org/url",
+	 *     attributes={
+	 *         "swagger_context"={
+	 *         	   "description" = "The location of the open api documentation of this api",
+	 *             "type"="string",
+	 *             "example"="https://api.my-organisation.com/docs",
+	 *             "maxLength"="255"
+	 *         }
+	 *     }
+	 * )
+	 * 
+     * @Assert\Url
+     * @Assert\Length(
+     *      max = 255
+     * )
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $documantation;
+    private $documentation;
 
-    /**
+    /**     
+	 * @var ArrayCollection $component The common ground component that this api provides
+	 * 
      * @Groups({"read"})
      * @ORM\ManyToOne(targetEntity="App\Entity\Component", inversedBy="apis")
      */
     private $component;
 
     /**
+	 * @var ArrayCollection $organisations The organisations that provide this api
+	 * 
      * @Groups({"read"})
      * @ORM\ManyToMany(targetEntity="App\Entity\Organisation", mappedBy="apis")
      */
@@ -175,7 +251,7 @@ class API
         $this->organisations = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
@@ -252,14 +328,14 @@ class API
         return $this;
     }
 
-    public function getDocumantation(): ?string
+    public function getDocumentation(): ?string
     {
-        return $this->documantation;
+    	return $this->documentation;
     }
 
-    public function setDocumantation(?string $documantation): self
+    public function setDocumentation(?string $documentation): self
     {
-        $this->documantation = $documantation;
+    	$this->documentation = $documentation;
 
         return $this;
     }

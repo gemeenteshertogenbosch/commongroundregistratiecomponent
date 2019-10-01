@@ -40,7 +40,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Component
 {
     /**
-     * @var \Ramsey\Uuid\UuidInterface The identifier of this Component
+     * @var \Ramsey\Uuid\UuidInterface $id The UUID identifier of this object
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @ApiProperty(
      * 	   identifier=true,
@@ -64,12 +65,14 @@ class Component
     private $id;
 
     /**
-	 * @param string The name of this component
+	 * @var string $name The name of this component
+     * @example My component
 	 *
 	 * @ApiProperty(
+     * 	   iri="http://schema.org/name",
 	 *     attributes={
 	 *         "swagger_context"={
-	 *         	   "description" = "he name of this component",
+	 *         	   "description" = "The name of this component",
 	 *             "type"="string",
 	 *             "example"="My component",
 	 *             "maxLength"="255",
@@ -88,9 +91,11 @@ class Component
     private $name;
 
     /**
-	 * @param string An short description of this component
+	 * @var string $description An short description of this component
+     * @example This is the best component ever
 	 *
 	 * @ApiProperty(
+     * 	   iri="https://schema.org/description",
 	 *     attributes={
 	 *         "swagger_context"={
 	 *         	   "description" = "An short description of this component",
@@ -110,9 +115,11 @@ class Component
     private $description;
 
     /**
-	 * @param string The logo for this component
+	 * @var string $logo The logo for this component
+     * @example https://www.my-organisation.com/logo.png
 	 *
 	 * @ApiProperty(
+     * 	   iri="https://schema.org/logo",
 	 *     attributes={
 	 *         "swagger_context"={
 	 *         	   "description" = "The logo for this component",
@@ -134,7 +141,8 @@ class Component
     private $logo;
 
     /**
-	 * @param string The current production version of this component
+	 * @var string $version The current production version of this component
+     * @example v0.1.2.3-beta
 	 *
 	 * @ApiProperty(
 	 *     attributes={
@@ -157,7 +165,8 @@ class Component
     private $version;
 
     /**
-	 * @param string The slug for this component
+	 * @var string $slug The slug for this component
+     * @example my-organisation
 	 *
 	 * @ApiProperty(
 	 *     attributes={
@@ -179,9 +188,11 @@ class Component
     private $slug;
 
     /**
-	 * @param string The link to the git repository for this component
+	 * @var string $git The link to the git repository for this component
+     * @example https://www.github.com/my-organisation/my-component.git
 	 *
 	 * @ApiProperty(
+     * 	   iri="https://schema.org/url",
 	 *     attributes={
 	 *         "swagger_context"={
 	 *         	   "description" = "The link to the git repository for this component",
@@ -205,7 +216,8 @@ class Component
     private $git;
 
     /**
-	 * @param string The git id for the repository for this component
+	 * @var string $gitId The git id for the repository for this component
+     * @example my-component
 	 *
 	 * @ApiProperty(
 	 *     attributes={
@@ -227,7 +239,8 @@ class Component
     private $gitId;
 
     /**
-	 * @param string The git type for the repository for this component
+	 * @var string $gitType The git type for the repository for this component
+     * @example({"Github", "Gitlab", "Bitbucket"})
 	 *
 	 * @ApiProperty(
 	 *     attributes={
@@ -250,7 +263,7 @@ class Component
     private $gitType;
 
     /**     
-	 * @param ArrayCollection The logo for this component
+	 * @var ArrayCollection $apis The APIs provided by this component
 	 * 
 	 * @Groups({"read"})
      * @ORM\OneToMany(targetEntity="App\Entity\API", mappedBy="component")
@@ -258,7 +271,7 @@ class Component
     private $apis;
 
     /**
-	 * @param ArrayCollection The logo for this component
+	 * @var ArrayCollection $organisations The organisations that provide this component
 	 * 
 	 * @Groups({"read"})
      * @ORM\ManyToMany(targetEntity="App\Entity\Organisation", mappedBy="components")
@@ -271,7 +284,7 @@ class Component
         $this->organisations = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }

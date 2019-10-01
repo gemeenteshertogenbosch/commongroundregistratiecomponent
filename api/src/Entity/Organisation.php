@@ -37,6 +37,19 @@ class Organisation
      * @var \Ramsey\Uuid\UuidInterface $id The UUID identifier of this object
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
+     * @ApiProperty(
+     * 	   identifier=true,
+     *     attributes={
+     *         "swagger_context"={
+     *         	   "description" = "The UUID identifier of this object",
+     *             "type"="string",
+     *             "format"="uuid",
+     *             "example"="e2984465-190a-4562-829e-a8cca81aa35d"
+     *         }
+     *     }
+     * )
+     *
+     * @Assert\Uuid
      * @Groups({"read"})
      * @ORM\Id
      * @ORM\Column(type="uuid", unique=true)
@@ -49,6 +62,19 @@ class Organisation
 	 * @var string $name The name of this organisation
      * @example My Organisation
 	 *
+	 * @ApiProperty(
+     * 	   iri="https://schema.org/name",
+	 *     attributes={
+	 *         "swagger_context"={
+	 *         	   "description" = "The name of this organisation",
+	 *             "type"="string",
+	 *             "example"="My Organisation",
+	 *             "maxLength"="255",
+	 *             "required" = true
+	 *         }
+	 *     }
+	 * )
+	 *
      * @Assert\NotNull
      * @Assert\Length(
      *      max = 255
@@ -60,7 +86,19 @@ class Organisation
 
     /**
 	 * @var string $description An short description of this organisation
-     * @example An short description of this organisation
+     * @example This is the best organisation ever
+	 *
+	 * @ApiProperty(
+     * 	   iri="https://schema.org/description",
+	 *     attributes={
+	 *         "swagger_context"={
+	 *         	   "description" = "An short description of this organisation",
+	 *             "type"="string",
+	 *             "example"="This is the best organisation ever",
+	 *             "maxLength"="2550,
+	 *         }
+	 *     }
+	 * )
 	 * 
      * @Assert\Length(
      *      max = 2550
@@ -73,6 +111,19 @@ class Organisation
     /**
 	 * @var string $logo The logo for this organisation
      * @example https://www.my-organisation.com/logo.png
+	 *
+	 * @ApiProperty(
+     * 	   iri="https://schema.org/logo",
+	 *     attributes={
+	 *         "swagger_context"={
+	 *         	   "description" = "The logo for this organisation",
+	 *             "type"="string",
+	 *             "format"="url",
+	 *             "example"="https://www.my-organisation.com/logo.png",
+	 *             "maxLength"="255,
+	 *         }
+	 *     }
+	 * )
 	 *	 
      * @Assert\Url
      * @Assert\Length(
@@ -86,6 +137,17 @@ class Organisation
     /**
 	 * @var string $slug The slug for this organisation
      * @example my-organisation
+	 *
+	 * @ApiProperty(
+	 *     attributes={
+	 *         "swagger_context"={
+	 *         	   "description" = "The slug for this organisation",
+	 *             "type"="string",
+	 *             "example"="my-organisation",
+	 *             "maxLength"="255,
+	 *         }
+	 *     }
+	 * )
 	 * 
      * @Groups({"read"})
      * @ORM\Column(type="string", length=255)
@@ -114,7 +176,7 @@ class Organisation
         $this->apis = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
